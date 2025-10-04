@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+	<rect width="16" height="16" rx="3" fill="#2D2D2D"/>
+	<defs>
+		<linearGradient id="shaderFile" x1="0" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+			<stop offset="0%" stop-color="#00FFD1"/>
+			<stop offset="100%" stop-color="#0077FF"/>
+		</linearGradient>
+	</defs>
+	<rect x="2" y="2" width="12" height="12" rx="2" fill="url(#shaderFile)" opacity="0.85"/>
+	<text x="50%" y="65%" text-anchor="middle" fill="white"
+		  font-size="8" font-weight="bold" font-family="Arial, sans-serif">
+		A
+	</text>
+</svg>

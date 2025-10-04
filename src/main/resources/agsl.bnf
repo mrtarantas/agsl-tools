@@ -1,0 +1,165 @@
+{
+  psiPackage="com.mrtarantas.agsl.language.generated.psi"
+  psiImplPackage="com.mrtarantas.agsl.language.generated.psi.impl"
+  elementTypeHolderClass="com.mrtarantas.agsl.language.generated.psi.AgslTypes"
+  parserClass="com.mrtarantas.agsl.language.generated.parser.AgslParser"
+  parserUtilClass="com.mrtarantas.agsl.language.generated.parser.AgslParserUtil"
+  psiImplBaseClass="com.intellij.extapi.psi.ASTWrapperPsiElement"
+  visitorClass="com.mrtarantas.agsl.language.generated.psi.AgslVisitor"
+  elementTypeClass="com.mrtarantas.agsl.language.AgslElementType"
+  tokenTypeClass="com.mrtarantas.agsl.language.AgslTokenType"
+  generatePsi=true
+  psiClassPrefix="Agsl"
+
+  tokens = [
+    WS = 'regexp:[ \t\r\n]+'
+    TRUE  = 'true'
+    FALSE = 'false'
+
+    LPAREN='(' RPAREN=')' LBRACE='{' RBRACE='}' LBRACK='[' RBRACK=']'
+    COMMA=',' DOT='.' SEMI=';' QUESTION='?' COLON=':'
+
+    PLUSPLUS='++' MINUSMINUS='--'
+    LE='<=' GE='>=' EQEQ='==' NEQ='!='
+    ANDAND='&&' XORXOR='^^' OROR='||'
+    PLUS_EQ ='+=' MINUS_EQ='-=' STAR_EQ='*=' SLASH_EQ='/='
+    EQ='=' LT='<' GT='>' PLUS='+' MINUS='-' STAR='*' SLASH='/' EXCL='!'
+
+    KW_VOID='void'
+    KW_BOOL='bool'  KW_BVEC2='bvec2' KW_BVEC3='bvec3' KW_BVEC4='bvec4'
+    KW_BOOL2='bool2' KW_BOOL3='bool3' KW_BOOL4='bool4'
+    KW_INT='int'    KW_IVEC2='ivec2' KW_IVEC3='ivec3' KW_IVEC4='ivec4'
+    KW_INT2='int2' KW_INT3='int3' KW_INT4='int4'
+    KW_FLOAT='float' KW_VEC2='vec2' KW_VEC3='vec3' KW_VEC4='vec4'
+    KW_FLOAT2='float2' KW_FLOAT3='float3' KW_FLOAT4='float4'
+
+    KW_SHORT='short' KW_SHORT2='short2' KW_SHORT3='short3' KW_SHORT4='short4'
+    KW_HALF='half'   KW_HALF2='half2'   KW_HALF3='half3'   KW_HALF4='half4'
+
+    KW_MAT2='mat2' KW_MAT3='mat3' KW_MAT4='mat4'
+    KW_FLOAT2X2='float2x2' KW_FLOAT3X3='float3x3' KW_FLOAT4X4='float4x4'
+    KW_HALF2X2='half2x2'   KW_HALF3X3='half3x3'   KW_HALF4X4='half4x4'
+
+    KW_SHADER='shader'
+
+    KW_UNIFORM='uniform' KW_CONST='const'
+    KW_IN='in' KW_OUT='out' KW_INOUT='inout'
+
+    KW_IF='if' KW_ELSE='else' KW_FOR='for' KW_WHILE='while' KW_DO='do'
+    KW_RETURN='return' KW_BREAK='break' KW_CONTINUE='continue'
+
+    LINE_COMMENT  = 'regexp://.*'
+    BLOCK_COMMENT = 'regexp:/\\*([^*]|(\\*+[^*/]))*\\*/'
+
+    IDENT        = 'regexp:[A-Za-z_][A-Za-z0-9_]*'
+    INT_LITERAL  = 'regexp:[0-9]+'
+    FLOAT_LITERAL= 'regexp:([0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?|\\.[0-9]+([eE][+-]?[0-9]+)?)'
+  ]
+}
+
+// ---------- Root ----------
+AgslFile ::= item*
+
+private item ::= declaration | statement | SEMI
+
+// ---------- Declaration ----------
+declaration ::= uniform_decl
+              | const_decl
+              | var_decl
+              | func_def
+              | struct_decl
+
+uniform_decl ::= KW_UNIFORM type var_list SEMI
+const_decl   ::= KW_CONST type init_declarator_list SEMI
+var_decl     ::= type init_declarator_list SEMI
+
+// a, b=1, c
+init_declarator_list ::= init_declarator (COMMA init_declarator)*
+init_declarator      ::= IDENT (EQ expr)?
+
+// Struct
+struct_decl ::= 'struct' IDENT LBRACE struct_member* RBRACE (IDENT)? SEMI
+struct_member ::= type var_list SEMI
+var_list ::= IDENT (COMMA IDENT)*
+
+// ---------- Types ----------
+type ::= scalar_type | vector_type | matrix_type | glsl_vec_type | glsl_mat_type | KW_SHADER | KW_VOID
+
+scalar_type ::= KW_BOOL | KW_INT | KW_FLOAT | KW_SHORT | KW_HALF
+
+// AGSL vector alternatives
+vector_type ::= KW_SHORT2 | KW_SHORT3 | KW_SHORT4
+              | KW_HALF2  | KW_HALF3  | KW_HALF4
+              | KW_FLOAT2 | KW_FLOAT3 | KW_FLOAT4
+              | KW_BOOL2 | KW_BOOL3 | KW_BOOL4
+              | KW_INT2 | KW_INT3 | KW_INT4
+
+// ALSL vectors
+glsl_vec_type ::= KW_BVEC2|KW_BVEC3|KW_BVEC4
+                | KW_IVEC2|KW_IVEC3|KW_IVEC4
+                | KW_VEC2 |KW_VEC3 |KW_VEC4
+
+matrix_type ::= KW_FLOAT2X2 | KW_FLOAT3X3 | KW_FLOAT4X4
+              | KW_HALF2X2  | KW_HALF3X3  | KW_HALF4X4
+
+glsl_mat_type ::= KW_MAT2 | KW_MAT3 | KW_MAT4
+
+// ---------- functions ----------
+func_def ::= type IDENT LPAREN param_list? RPAREN compound_stmt
+param_list ::= param (COMMA param)*
+param ::= (KW_IN|KW_OUT|KW_INOUT)? type IDENT
+
+// ---------- statements ----------
+statement ::=
+      compound_stmt
+    | if_stmt
+    | while_stmt
+    | do_while_stmt
+    | for_stmt
+    | break_stmt
+    | continue_stmt
+    | return_stmt
+    | expr_stmt
+
+compound_stmt ::= LBRACE item* RBRACE
+if_stmt       ::= KW_IF LPAREN expr RPAREN statement (KW_ELSE statement)?
+while_stmt    ::= KW_WHILE LPAREN expr RPAREN statement
+do_while_stmt ::= KW_DO statement KW_WHILE LPAREN expr RPAREN SEMI
+for_stmt      ::= KW_FOR LPAREN (var_decl | expr_stmt | SEMI)
+                              expr? SEMI
+                              expr? RPAREN statement
+break_stmt    ::= KW_BREAK SEMI
+continue_stmt ::= KW_CONTINUE SEMI
+return_stmt   ::= KW_RETURN expr? SEMI
+expr_stmt     ::= expr SEMI
+
+// ---------- Expressions ----------
+expr                    ::= assignment_expr
+assignment_expr         ::= conditional_expr ( (EQ|PLUS_EQ|MINUS_EQ|STAR_EQ|SLASH_EQ) assignment_expr )?
+conditional_expr        ::= logical_or_expr (QUESTION expr COLON expr)?
+logical_or_expr         ::= logical_xor_expr (OROR   logical_xor_expr)*
+logical_xor_expr        ::= logical_and_expr (XORXOR logical_and_expr)*
+logical_and_expr        ::= equality_expr    (ANDAND equality_expr)*
+equality_expr           ::= relational_expr  ((EQEQ|NEQ) relational_expr)*
+relational_expr         ::= additive_expr    ((LT|GT|LE|GE) additive_expr)*
+additive_expr           ::= multiplicative_expr ((PLUS|MINUS) multiplicative_expr)*
+multiplicative_expr     ::= prefix_expr      ((STAR|SLASH)  prefix_expr)*
+
+prefix_expr             ::= (PLUSPLUS|MINUSMINUS|PLUS|MINUS|EXCL) prefix_expr
+                          | postfix_expr
+
+postfix_expr            ::= primary_expr (
+                            (PLUSPLUS|MINUSMINUS)
+                            | (LPAREN argument_list? RPAREN)
+                            | (LBRACK expr RBRACK)
+                            | (DOT IDENT)
+                          )*
+
+primary_expr            ::= literal
+                          | IDENT
+                          | type
+                          | LPAREN expr RPAREN
+
+literal                 ::= TRUE | FALSE | INT_LITERAL | FLOAT_LITERAL
+
+argument_list           ::= expr (COMMA expr)*

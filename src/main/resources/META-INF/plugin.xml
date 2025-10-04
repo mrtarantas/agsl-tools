@@ -1,0 +1,61 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+	<!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+	<id>com.mrtarantas.AGSL</id>
+
+	<!-- Public plugin name should be written in Title Case.
+		 Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
+	<name>AGSL Tools</name>
+
+	<!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+	<vendor>Mikhailuts Ivan</vendor>
+
+	<version>1.0.0</version>
+
+	<!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+		 Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+	<description><![CDATA[
+  <h2>AGSL Tools</h2>
+
+   <ul>
+    <li>Real-time AGSL shader preview</li>
+    <li>Uniform parameters tuning</li>
+    <li>AGSL syntax highlighting</li>
+    <li>AGSL autocompletion</li>
+  </ul>
+]]></description>
+
+	<!-- Product and plugin compatibility requirements.
+		 Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+	<depends>com.intellij.modules.platform</depends>
+	<depends>com.intellij.modules.lang</depends>
+
+	<!-- Extension points defined by the plugin.
+		 Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+	<extensions defaultExtensionNs="com.intellij">
+		<fileType
+			name="Android Shader Language"
+			implementationClass="com.mrtarantas.agsl.language.AgslFileType"
+			fieldName="INSTANCE"
+			extensions="agsl"
+			language="AndroidShaderLanguage"/>
+
+		<fileEditorProvider implementation="com.mrtarantas.agsl.AgslPreviewEditorProvider"/>
+
+		<lang.parserDefinition
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslParserDefinition"/>
+
+		<lang.syntaxHighlighterFactory
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslSyntaxHighlighterFactory"/>
+
+		<lang.commenter
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslCommenter"/>
+
+		<completion.contributor
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslCompletionContributor"/>
+	</extensions>
+</idea-plugin>
