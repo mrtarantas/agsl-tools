@@ -9,14 +9,13 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
-import com.intellij.ui.dsl.builder.Panel
-import com.intellij.ui.dsl.builder.Row
-import com.intellij.ui.dsl.builder.actionButton
-import com.intellij.ui.dsl.builder.text
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.dsl.builder.*
+import com.intellij.util.ui.JBUI
 import com.mrtarantas.agsl.models.PreviewType
 import com.mrtarantas.agsl.uistates.UniformPropertyUiState
 import com.mrtarantas.agsl.uistates.UniformUiState
-import java.awt.Dimension
+import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JSlider
 
@@ -27,9 +26,7 @@ fun Panel.uniformRow(
 	onChangePreviewType: (uniform: String, newType: PreviewType) -> Unit,
 ) {
 	row {
-		label("${property.name}: ").applyToComponent {
-			minimumSize = Dimension(100, 0)
-		}
+		cell(nameLabel(property.name)).align(AlignY.TOP)
 		when (val uniform = property.value) {
 			is UniformUiState.Float1 -> {
 				floatInput().label("X ").text(uniform.value.toString())
@@ -338,6 +335,15 @@ fun Panel.uniformRow(
 	}
 	if (hasSeparator)
 		separator()
+}
+
+private const val NAME_COLUMN_WIDTH = 150
+
+private fun nameLabel(name: String): JLabel {
+	val width = JBUI.scale(NAME_COLUMN_WIDTH)
+	return JBLabel("<html><div style='width:${width}px'>$name:</div></html>").apply {
+		preferredSize = preferredSize.apply { this.width = width }
+	}
 }
 
 private class NumComp(val label: String, val initial: String, val onChange: (String) -> Unit)
