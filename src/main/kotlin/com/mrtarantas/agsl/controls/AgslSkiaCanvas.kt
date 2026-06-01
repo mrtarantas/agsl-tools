@@ -5,15 +5,21 @@ import com.mrtarantas.agsl.uistates.UniformPropertyUiState
 import com.mrtarantas.agsl.uistates.UniformUiState
 import com.mrtarantas.agsl.utils.tryClose
 import org.jetbrains.skia.*
-import org.jetbrains.skiko.SkiaLayer
+import org.jetbrains.skiko.ExperimentalSkikoApi
+import org.jetbrains.skiko.GraphicsApi
 import org.jetbrains.skiko.SkikoRenderDelegate
+import org.jetbrains.skiko.swing.SkiaSwingLayer
 import java.awt.BorderLayout
+import java.awt.event.HierarchyEvent
 import javax.swing.JPanel
+import javax.swing.SwingUtilities
 import javax.swing.Timer
 import kotlin.math.max
 
+@OptIn(ExperimentalSkikoApi::class)
 class AgslSkiaPanel : JPanel(BorderLayout()), SkikoRenderDelegate {
-	private val layer = SkiaLayer()
+	private val layer = SkiaSwingLayer(this)
+
 	private var ticker: Timer? = null
 	private var startNs = System.nanoTime()
 	private var effect: RuntimeEffect? = null
@@ -25,21 +31,43 @@ class AgslSkiaPanel : JPanel(BorderLayout()), SkikoRenderDelegate {
 	private data class ShaderCache(val width: Int, val height: Int, val shader: Shader, val image: Image)
 
 	init {
-		layer.renderDelegate = this
 		add(layer, BorderLayout.CENTER)
+		addHierarchyListener { e ->
+			if (e.changeFlags and HierarchyEvent.SHOWING_CHANGED.toLong() != 0L) {
+				if (isShowing) startTicker() else stopTicker()
+			}
+		}
 	}
 
 	override fun addNotify() {
 		super.addNotify()
-		if (ticker == null) {
-			ticker = Timer(16) { layer.needRedraw() }.also { it.start() }
-		}
+		if (isShowing) startTicker()
 	}
 
 	override fun removeNotify() {
+		stopTicker()
+		super.removeNotify()
+	}
+
+	private val isSoftwareRender: Boolean
+		get() = layer.renderApi == GraphicsApi.SOFTWARE_FAST || layer.renderApi == GraphicsApi.SOFTWARE_COMPAT
+
+	private fun startTicker() {
+		if (ticker != null) return
+		ticker = Timer(16) {
+			if (!isShowing) return@Timer
+			if (isSoftwareRender) {
+				stopTicker()
+				layer.repaint()
+				return@Timer
+			}
+			layer.repaint()
+		}.also { it.start() }
+	}
+
+	private fun stopTicker() {
 		ticker?.stop()
 		ticker = null
-		super.removeNotify()
 	}
 
 	private fun releaseExpiredCache() {
@@ -110,9 +138,9 @@ class AgslSkiaPanel : JPanel(BorderLayout()), SkikoRenderDelegate {
 								}
 								val cache = shaderCache[file] ?: run {
 									val image = loadImage(file)
-									val cache = ShaderCache(width, height, image.makePreviewShader(width, height), image)
-									shaderCache[file] = cache
-									cache
+									val newCache = ShaderCache(width, height, image.makePreviewShader(width, height), image)
+									shaderCache[file] = newCache
+									newCache
 								}
 								builder.child(uniform.name, cache.shader)
 							}
@@ -134,6 +162,7 @@ class AgslSkiaPanel : JPanel(BorderLayout()), SkikoRenderDelegate {
 			this.uniforms.clear()
 			this.uniforms += uniforms
 			onShaderSuccess?.invoke()
+			if (isShowing) layer.repaint()
 		} catch (t: Throwable) {
 			onShaderError?.invoke(t)
 			t.printStackTrace()
@@ -141,11 +170,15 @@ class AgslSkiaPanel : JPanel(BorderLayout()), SkikoRenderDelegate {
 	}
 
 	fun dispose() {
+		stopTicker()
 		effect = null
-		layer.dispose()
 		shaderCache.values.forEach {
 			it.shader.tryClose()
 			it.image.tryClose()
+		}
+		shaderCache.clear()
+		if (SwingUtilities.isEventDispatchThread()) {
+			layer.dispose()
 		}
 	}
 

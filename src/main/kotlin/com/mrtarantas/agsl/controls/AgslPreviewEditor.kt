@@ -34,11 +34,7 @@ import com.mrtarantas.agsl.mappers.UniformToUiStateMapper
 import com.mrtarantas.agsl.parsers.UniformParser
 import com.mrtarantas.agsl.uistates.UniformPropertyUiState
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.awt.Color
-import java.awt.Component
-import java.awt.Container
-import java.awt.Dimension
-import java.awt.LayoutManager
+import java.awt.*
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -76,9 +72,10 @@ class AgslPreviewEditor(
 			collapsingRow = collapsibleGroup("Uniforms") {
 				row {
 					cell(itemsPanel).align(Align.FILL)
-				}
+				}.resizableRow()
 			}.apply {
 				expanded = true
+				resizableRow()
 			}
 		}
 		val previewPanel: DialogPanel = panel {

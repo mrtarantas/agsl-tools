@@ -49,8 +49,19 @@ intellijPlatform {
 
 dependencies {
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.8.0")
-	implementation("org.jetbrains.skiko:skiko-awt:0.9.22")
-	runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-all:0.9.22")
+	// skiko transitively pulls in `org.jetbrains.runtime:jbr-api`, which bundles the
+	// `com.jetbrains.*` JBR API classes (JBR, JBRFileDialog, SharedTextures, ...).
+	// Those classes are already provided by the JetBrains Runtime. If the plugin bundles
+	// its own copy, the plugin classloader shadows the platform one and the JBR API's
+	// internal ProxyRepository fails with "Incompatible classloader", breaking JBR
+	// services IDE-wide (native file chooser, shared textures, etc.). So exclude it —
+	// the real implementation comes from the running JBR at runtime.
+	implementation("org.jetbrains.skiko:skiko-awt:0.9.22") {
+		exclude(group = "org.jetbrains.runtime", module = "jbr-api")
+	}
+	runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-all:0.9.22") {
+		exclude(group = "org.jetbrains.runtime", module = "jbr-api")
+	}
 }
 
 tasks {
