@@ -38,6 +38,12 @@ class ItemsPanel<Item>(
 		}
 		container.revalidate()
 		container.repaint()
+		// Propagate size change up so parent layout recalculates uniforms height cap
+		var p = parent
+		while (p != null) {
+			p.revalidate()
+			p = p.parent
+		}
 	}
 
 	override fun dispose() {

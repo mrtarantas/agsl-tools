@@ -35,13 +35,14 @@ import com.mrtarantas.agsl.parsers.UniformParser
 import com.mrtarantas.agsl.uistates.UniformPropertyUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.awt.Color
+import java.awt.Component
 import java.awt.Container
 import java.awt.Dimension
+import java.awt.LayoutManager
 import java.beans.PropertyChangeListener
-import javax.swing.BoxLayout
 import javax.swing.JComponent
+import javax.swing.JPanel
 import javax.swing.SwingUtilities
-import kotlin.math.min
 
 class AgslPreviewEditor(
 	private val project: Project,
@@ -49,7 +50,7 @@ class AgslPreviewEditor(
 ) : UserDataHolderBase(), FileEditor, DumbAware, Disposable {
 
 	private val skiaPanel = AgslSkiaPanel()
-	private val panel: DialogPanel = DialogPanel()
+	private val panel: JPanel = JPanel()
 	private val document: Document?
 	private val psiFile: AgslFile?
 	private val docListener: DocumentListener
@@ -70,9 +71,8 @@ class AgslPreviewEditor(
 			hasErrorMessage.set(it.isNotBlank())
 		}
 		val itemsPanel = ItemsPanel(model, ::getUniformCell)
-		panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
 		var collapsingRow: CollapsibleRow? = null
-		val uniforms = panel {
+		val uniformsPanel: DialogPanel = panel {
 			collapsingRow = collapsibleGroup("Uniforms") {
 				row {
 					cell(itemsPanel).align(Align.FILL)
@@ -81,26 +81,55 @@ class AgslPreviewEditor(
 				expanded = true
 			}
 		}
-		panel.add(uniforms)
-		uniforms.layout = object : BoxLayout(uniforms, BoxLayout.Y_AXIS) {
-			override fun maximumLayoutSize(target: Container?): Dimension {
-				return Dimension(Int.MAX_VALUE, if (collapsingRow?.expanded == true) panel.height / 2 else -1)
-			}
-
-			override fun preferredLayoutSize(target: Container?): Dimension {
-				val wrapSize = uniforms.components.sumOf { it.preferredSize.height }
-				return Dimension(Int.MAX_VALUE, if (collapsingRow?.expanded == true) min(wrapSize, panel.height / 2) else 30)
-			}
-		}
-		panel.add(panel {
+		val previewPanel: DialogPanel = panel {
 			group("Preview") {
 				row { cell(skiaPanel).align(Align.FILL).resizableColumn() }.resizableRow()
 				row {
 					validationTooltip(errorMessage).visibleIf(hasErrorMessage)
 				}
 			}.resizableRow()
-		})
+		}
+
+		panel.layout = object : LayoutManager {
+			override fun addLayoutComponent(name: String?, comp: Component?) {}
+			override fun removeLayoutComponent(comp: Component?) {}
+
+			override fun preferredLayoutSize(parent: Container): Dimension {
+				val w = parent.width
+				val h = parent.height
+				val uniformsPref = if (collapsingRow?.expanded == true)
+					uniformsPanel.preferredSize.height.coerceAtMost(if (h > 0) h / 2 else Int.MAX_VALUE)
+				else
+					uniformsPanel.preferredSize.height
+				val previewPref = previewPanel.preferredSize.height
+				return Dimension(w, uniformsPref + previewPref)
+			}
+
+			override fun minimumLayoutSize(parent: Container): Dimension = Dimension(0, 0)
+
+			override fun layoutContainer(parent: Container) {
+				val insets = parent.insets
+				val x = insets.left
+				val y = insets.top
+				val w = parent.width - insets.left - insets.right
+				val h = parent.height - insets.top - insets.bottom
+
+				val uniformsH = if (collapsingRow?.expanded == true) {
+					uniformsPanel.preferredSize.height.coerceAtMost(h / 2)
+				} else {
+					uniformsPanel.preferredSize.height
+				}
+				uniformsPanel.setBounds(x, y, w, uniformsH)
+				previewPanel.setBounds(x, y + uniformsH, w, h - uniformsH)
+			}
+		}
+
+		panel.add(uniformsPanel)
+		panel.add(previewPanel)
 		panel.border = JBUI.Borders.customLine(transparent, 50)
+
+		// Re-layout when uniforms collapse/expand
+		collapsingRow?.addExpandedListener { panel.revalidate() }
 
 		document = FileDocumentManager.getInstance().getDocument(file)
 		docListener = object : DocumentListener {
@@ -133,8 +162,11 @@ class AgslPreviewEditor(
 				WriteCommandAction.runWriteCommandAction(project) {
 					val skiaShader = agslToSkiaShaderConverter.invoke(src, project)
 					SwingUtilities.invokeLater {
-						model.value = uniforms.map { uniform -> uniformToUiStateMapper.invoke(uniform, model.value.find { it.name == uniform.name }?.value) }
+						model.value = uniforms.map { uniform ->
+							uniformToUiStateMapper.invoke(uniform, model.value.find { it.name == uniform.name }?.value)
+						}
 						skiaPanel.pushNewShader(skiaShader, model.value)
+						panel.revalidate()
 					}
 				}
 			}
@@ -149,7 +181,7 @@ class AgslPreviewEditor(
 	override fun getPreferredFocusedComponent(): JComponent = panel
 	override fun getName(): String = "AGSL Preview"
 	override fun setState(state: FileEditorState) {}
-	override fun isModified(): Boolean = panel.isModified()
+	override fun isModified(): Boolean = false
 	override fun isValid(): Boolean = file.isValid
 
 	override fun selectNotify() {}
