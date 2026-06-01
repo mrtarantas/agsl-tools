@@ -7,8 +7,7 @@
 		</linearGradient>
 	</defs>
 	<rect x="2" y="2" width="12" height="12" rx="2" fill="url(#shaderFile)" opacity="0.85"/>
-	<text x="50%" y="65%" text-anchor="middle" fill="white"
-		  font-size="8" font-weight="bold" font-family="Arial, sans-serif">
-		A
-	</text>
+	<g fill="white">
+		<path transform="translate(4.750 11.221) scale(0.00439 -0.00439)" d="M1471 0H1149L1021 333H435L314 0H0L571 1466H884ZM926 580 724 1124 526 580Z"/>
+	</g>
 </svg>
