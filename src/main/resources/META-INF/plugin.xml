@@ -57,5 +57,25 @@
 		<completion.contributor
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslCompletionContributor"/>
+
+		<lang.findUsagesProvider
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslFindUsagesProvider"/>
+
+		<lang.namesValidator
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslNamesValidator"/>
+
+		<lang.refactoringSupport
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslRefactoringSupportProvider"/>
+
+		<psi.referenceContributor
+			language="AndroidShaderLanguage"
+			implementation="com.mrtarantas.agsl.language.AgslReferenceContributor"/>
+
+		<lang.documentationProvider
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslDocumentationProvider"/>
 	</extensions>
 </idea-plugin>

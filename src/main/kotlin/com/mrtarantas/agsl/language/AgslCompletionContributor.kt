@@ -18,17 +18,7 @@ private val TYPES = listOf(
 	"float2", "float3", "float4", "half2", "half3", "half4", "short2", "short3", "short4",
 	"mat2", "mat3", "mat4", "float2x2", "float3x3", "float4x4", "half2x2", "half3x3", "half4x4"
 )
-private val FUNCS = listOf(
-	"radians", "degrees", "sin", "cos", "tan", "asin", "acos", "atan",
-	"pow", "exp", "log", "exp2", "log2", "sqrt", "inversesqrt",
-	"abs", "sign", "floor", "ceil", "fract", "mod", "min", "max", "clamp", "saturate", "step", "smoothstep",
-	"length", "distance", "dot", "cross", "normalize", "faceforward", "reflect", "refract",
-	"matrixCompMult", "inverse",
-	"unpremul", "toLinearSrgb", "fromLinearSrgb",
-	"eval",
-	"x", "y", "z", "w",
-	"r", "g", "b", "a"
-)
+private val FUNCS = AgslBuiltins.FUNCTIONS + AgslBuiltins.METHODS + AgslBuiltins.SWIZZLES
 
 class AgslCompletionContributor : CompletionContributor() {
 	init {
@@ -46,7 +36,7 @@ class AgslCompletionContributor : CompletionContributor() {
 				// имена функций из текущего файла
 				val file = params.originalFile as? AgslFile ?: return
 				file.findFuncDefs("").forEach { def ->
-					def.nameIdentifier()?.text?.let { name ->
+					def.name?.let { name ->
 						result.addElement(LookupElementBuilder.create(name).withTypeText("func", true))
 					}
 				}
@@ -57,7 +47,7 @@ class AgslCompletionContributor : CompletionContributor() {
 			override fun addCompletions(params: CompletionParameters, ctx: ProcessingContext, result: CompletionResultSet) {
 				val file = params.originalFile as? AgslFile ?: return
 				file.findFuncDefs("").forEach { def ->
-					def.nameIdentifier()?.text?.let { name ->
+					def.name?.let { name ->
 						result.addElement(LookupElementBuilder.create(name).withTypeText("func", true))
 					}
 				}

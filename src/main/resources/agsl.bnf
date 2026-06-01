@@ -75,12 +75,19 @@ var_decl     ::= type init_declarator_list SEMI
 
 // a, b=1, c
 init_declarator_list ::= init_declarator (COMMA init_declarator)*
-init_declarator      ::= IDENT (EQ expr)?
+init_declarator      ::= IDENT (EQ expr)? {
+  implements="com.mrtarantas.agsl.language.psi.AgslNamedElement"
+  mixin="com.mrtarantas.agsl.language.psi.AgslNamedElementMixin"
+}
 
 // Struct
 struct_decl ::= 'struct' IDENT LBRACE struct_member* RBRACE (IDENT)? SEMI
 struct_member ::= type var_list SEMI
-var_list ::= IDENT (COMMA IDENT)*
+var_list ::= var_name (COMMA var_name)*
+var_name ::= IDENT {
+  implements="com.mrtarantas.agsl.language.psi.AgslNamedElement"
+  mixin="com.mrtarantas.agsl.language.psi.AgslNamedElementMixin"
+}
 
 // ---------- Types ----------
 type ::= scalar_type | vector_type | matrix_type | glsl_vec_type | glsl_mat_type | KW_SHADER | KW_VOID
@@ -105,9 +112,15 @@ matrix_type ::= KW_FLOAT2X2 | KW_FLOAT3X3 | KW_FLOAT4X4
 glsl_mat_type ::= KW_MAT2 | KW_MAT3 | KW_MAT4
 
 // ---------- functions ----------
-func_def ::= type IDENT LPAREN param_list? RPAREN compound_stmt
+func_def ::= type IDENT LPAREN param_list? RPAREN compound_stmt {
+  implements="com.mrtarantas.agsl.language.psi.AgslNamedElement"
+  mixin="com.mrtarantas.agsl.language.psi.AgslNamedElementMixin"
+}
 param_list ::= param (COMMA param)*
-param ::= (KW_IN|KW_OUT|KW_INOUT)? type IDENT
+param ::= (KW_IN|KW_OUT|KW_INOUT)? type IDENT {
+  implements="com.mrtarantas.agsl.language.psi.AgslNamedElement"
+  mixin="com.mrtarantas.agsl.language.psi.AgslNamedElementMixin"
+}
 
 // ---------- statements ----------
 statement ::=
@@ -156,9 +169,13 @@ postfix_expr            ::= primary_expr (
                           )*
 
 primary_expr            ::= literal
-                          | IDENT
+                          | reference_expr
                           | type
                           | LPAREN expr RPAREN
+
+reference_expr          ::= IDENT {
+  mixin="com.mrtarantas.agsl.language.psi.AgslReferenceExprMixin"
+}
 
 literal                 ::= TRUE | FALSE | INT_LITERAL | FLOAT_LITERAL
 

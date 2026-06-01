@@ -1,13 +1,16 @@
+import org.jetbrains.intellij.platform.gradle.tasks.GenerateLexerTask
+import org.jetbrains.intellij.platform.gradle.tasks.GenerateParserTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
 	id("java")
 	id("org.jetbrains.kotlin.jvm") version "2.2.21"
 	id("org.jetbrains.intellij.platform") version "2.10.4"
+	id("org.jetbrains.intellij.platform.grammarkit") version "2.16.0"
 }
 
 group = "com.mrtarantas"
-version = "1.0.1"
+version = "1.1.0"
 
 val targetBuild = "252"
 val targetIJVersion = "2025.2.1"
@@ -77,4 +80,31 @@ tasks {
 	patchPluginXml {
 		sinceBuild.set(targetBuild)
 	}
+
+	val genDir = "src/main/gen"
+	val pkgPath = "com/mrtarantas/agsl/language/generated"
+
+	named<GenerateParserTask>("generateParser") {
+		sourceFile.set(file("src/main/resources/agsl.bnf"))
+		targetRootOutputDir.set(file(genDir))
+		pathToParser.set("$pkgPath/parser/AgslParser.java")
+		pathToPsiRoot.set("$pkgPath/psi")
+		purgeOldFiles.set(true)
+	}
+
+	named<GenerateLexerTask>("generateLexer") {
+		sourceFile.set(file("src/main/resources/agsl.flex"))
+		targetRootOutputDir.set(file(genDir))
+		packageName.set("com.mrtarantas.agsl.language.generated.lexer")
+		purgeOldFiles.set(false)
+	}
+
+	register("generateAgsl") {
+		group = "code generation"
+		description = "Regenerate AGSL parser, PSI and lexer from agsl.bnf / agsl.flex"
+		dependsOn("generateParser", "generateLexer")
+	}
+
+	named("compileKotlin") { dependsOn("generateParser", "generateLexer") }
+	named("compileJava") { dependsOn("generateParser", "generateLexer") }
 }

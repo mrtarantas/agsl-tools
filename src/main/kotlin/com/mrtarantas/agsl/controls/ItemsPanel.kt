@@ -42,7 +42,6 @@ class ItemsPanel<Item>(
 		scrollPane.setViewportView(WidthTrackingWrapper(content(list)))
 		scrollPane.revalidate()
 		scrollPane.repaint()
-		// Propagate size change up so the parent layout recalculates the uniforms height cap.
 		var p = parent
 		while (p != null) {
 			p.revalidate()

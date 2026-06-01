@@ -18,8 +18,8 @@ import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.CollapsibleRow
-import com.intellij.ui.dsl.builder.components.validationTooltip
 import com.intellij.ui.dsl.builder.TopGap
+import com.intellij.ui.dsl.builder.components.validationTooltip
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.update.MergingUpdateQueue
@@ -28,13 +28,14 @@ import com.mrtarantas.agsl.converters.AgslToSkiaShaderConverter
 import com.mrtarantas.agsl.dsl.uniformRow
 import com.mrtarantas.agsl.language.AgslFile
 import com.mrtarantas.agsl.language.changeUniformPreviewType
-import com.mrtarantas.agsl.language.insertUniformsAfterLast
-import com.mrtarantas.agsl.language.suggestUniqueName
 import com.mrtarantas.agsl.mappers.UniformToUiStateMapper
 import com.mrtarantas.agsl.parsers.UniformParser
 import com.mrtarantas.agsl.uistates.UniformPropertyUiState
 import kotlinx.coroutines.flow.MutableStateFlow
-import java.awt.*
+import java.awt.Component
+import java.awt.Container
+import java.awt.Dimension
+import java.awt.LayoutManager
 import java.beans.PropertyChangeListener
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -128,7 +129,6 @@ class AgslPreviewEditor(
 		panel.add(previewPanel)
 		panel.border = JBUI.Borders.empty(8, 16)
 
-		// Re-layout when uniforms collapse/expand
 		collapsingRow?.addExpandedListener { panel.revalidate() }
 
 		document = FileDocumentManager.getInstance().getDocument(file)
@@ -175,10 +175,6 @@ class AgslPreviewEditor(
 				}
 			}
 		})
-	}
-
-	private fun addNewUniform() {
-		psiFile?.insertUniformsAfterLast(project, "uniform float4 ${psiFile.suggestUniqueName("name")}")
 	}
 
 	override fun getComponent(): JComponent = panel

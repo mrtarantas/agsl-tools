@@ -11,16 +11,12 @@ import com.mrtarantas.agsl.language.generated.psi.*
 import com.mrtarantas.agsl.models.PreviewType
 import com.mrtarantas.agsl.parsers.CommentPreviewTypeBuilder
 
-fun AgslFuncDef.nameIdentifier(): PsiElement? =
-	node.findChildByType(AgslTypes.IDENT)?.psi
-
 fun AgslFile.findFuncDefs(name: String): Collection<AgslFuncDef> =
 	PsiTreeUtil.findChildrenOfType(this, AgslFuncDef::class.java)
-		.filter { it.nameIdentifier()?.text == name }
+		.filter { it.name == name }
 
-fun AgslUniformDecl.variableNames(): List<String> {
-	return varList.text.split(',').map { it.trim() }
-}
+fun AgslUniformDecl.variableNames(): List<String> =
+	varList.varNameList.mapNotNull { it.name }
 
 fun AgslFile.suggestUniqueName(origName: String): String {
 	val allUniforms = PsiTreeUtil.findChildrenOfType(this, AgslUniformDecl::class.java)
