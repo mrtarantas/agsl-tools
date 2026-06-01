@@ -3,27 +3,34 @@ package com.mrtarantas.agsl.controls
 import com.intellij.openapi.Disposable
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.swing.Swing
 import java.awt.BorderLayout
-import javax.swing.BoxLayout
+import java.awt.Dimension
+import java.awt.Rectangle
 import javax.swing.JComponent
+import javax.swing.ScrollPaneConstants
+import javax.swing.Scrollable
 
 class ItemsPanel<Item>(
 	private val items: StateFlow<List<Item>>,
-	private val cells: (index: Int, item: Item) -> JComponent,
+	private val content: (List<Item>) -> JComponent,
 ) : JBPanel<ItemsPanel<Item>>(BorderLayout()), Disposable {
 
-	private val container = JBPanel<JBPanel<*>>().apply {
-		layout = BoxLayout(this, BoxLayout.Y_AXIS)
+	private val scrollPane = JBScrollPane().apply {
+		border = JBUI.Borders.empty()
 		isOpaque = false
+		viewport.isOpaque = false
+		horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
 	}
 	private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
 	init {
-		add(JBScrollPane(container), BorderLayout.CENTER)
+		isOpaque = false
+		add(scrollPane, BorderLayout.CENTER)
 		scope.launch {
 			items.collectLatest { list ->
 				withContext(Dispatchers.Swing) { rebuild(list) }
@@ -31,14 +38,11 @@ class ItemsPanel<Item>(
 		}
 	}
 
-	fun rebuild(unwrapped: List<Item>) {
-		container.removeAll()
-		for (i in unwrapped.indices) {
-			container.add(cells.invoke(i, unwrapped[i]))
-		}
-		container.revalidate()
-		container.repaint()
-		// Propagate size change up so parent layout recalculates uniforms height cap
+	fun rebuild(list: List<Item>) {
+		scrollPane.setViewportView(WidthTrackingWrapper(content(list)))
+		scrollPane.revalidate()
+		scrollPane.repaint()
+		// Propagate size change up so the parent layout recalculates the uniforms height cap.
 		var p = parent
 		while (p != null) {
 			p.revalidate()
@@ -48,5 +52,18 @@ class ItemsPanel<Item>(
 
 	override fun dispose() {
 		scope.cancel()
+	}
+
+	private class WidthTrackingWrapper(view: JComponent) : JBPanel<WidthTrackingWrapper>(BorderLayout()), Scrollable {
+		init {
+			isOpaque = false
+			add(view, BorderLayout.NORTH)
+		}
+
+		override fun getPreferredScrollableViewportSize(): Dimension = preferredSize
+		override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int = 16
+		override fun getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int = 100
+		override fun getScrollableTracksViewportWidth(): Boolean = true
+		override fun getScrollableTracksViewportHeight(): Boolean = false
 	}
 }

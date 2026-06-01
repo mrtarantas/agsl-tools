@@ -9,8 +9,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.ColorPanel
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.ActionLink
+import com.intellij.ui.dsl.builder.Panel
+import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.actionButton
-import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.dsl.builder.text
 import com.mrtarantas.agsl.models.PreviewType
 import com.mrtarantas.agsl.uistates.UniformPropertyUiState
@@ -19,12 +20,12 @@ import java.awt.Dimension
 import javax.swing.JPanel
 import javax.swing.JSlider
 
-fun uniformCell(
+fun Panel.uniformRow(
 	property: UniformPropertyUiState,
 	project: Project,
 	hasSeparator: Boolean,
 	onChangePreviewType: (uniform: String, newType: PreviewType) -> Unit,
-) = panel {
+) {
 	row {
 		label("${property.name}: ").applyToComponent {
 			minimumSize = Dimension(100, 0)
@@ -41,54 +42,33 @@ fun uniformCell(
 				}
 			}
 			is UniformUiState.Float2 -> {
-				floatInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toFloatOrNull() ?: 0f
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toFloatOrNull() ?: 0f },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toFloatOrNull() ?: 0f },
+				)
 				cell(JPanel()).resizableColumn()
 				comboBox(listOf("Number", "Size")).onChanged {
 					onChangePreviewType(property.name, if (it.selectedItem == "Size") PreviewType.Size else PreviewType.Number)
 				}
 			}
 			is UniformUiState.Float3 -> {
-				floatInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("Z ").text(uniform.z.toString())
-					.onChanged {
-						uniform.z = it.text.toFloatOrNull() ?: 0f
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toFloatOrNull() ?: 0f },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toFloatOrNull() ?: 0f },
+					NumComp("Z", uniform.z.toString()) { uniform.z = it.toFloatOrNull() ?: 0f },
+				)
 				cell(JPanel()).resizableColumn()
 				comboBox(listOf("Number", "Color")).onChanged {
 					onChangePreviewType(property.name, if (it.selectedItem == "Color") PreviewType.Color else PreviewType.Number)
 				}
 			}
 			is UniformUiState.Float4 -> {
-				floatInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("Z ").text(uniform.z.toString())
-					.onChanged {
-						uniform.z = it.text.toFloatOrNull() ?: 0f
-					}
-				floatInput().label("W ").text(uniform.w.toString())
-					.onChanged {
-						uniform.w = it.text.toFloatOrNull() ?: 0f
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toFloatOrNull() ?: 0f },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toFloatOrNull() ?: 0f },
+					NumComp("Z", uniform.z.toString()) { uniform.z = it.toFloatOrNull() ?: 0f },
+					NumComp("W", uniform.w.toString()) { uniform.w = it.toFloatOrNull() ?: 0f },
+				)
 				cell(JPanel()).resizableColumn()
 				comboBox(listOf("Number", "Color")).onChanged {
 					onChangePreviewType(property.name, if (it.selectedItem == "Color") PreviewType.Color else PreviewType.Number)
@@ -185,46 +165,28 @@ fun uniformCell(
 					}
 			}
 			is UniformUiState.Int2 -> {
-				intInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toIntOrNull() ?: 0
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toIntOrNull() ?: 0 },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toIntOrNull() ?: 0 },
+					isInt = true,
+				)
 			}
 			is UniformUiState.Int3 -> {
-				intInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("Z ").text(uniform.z.toString())
-					.onChanged {
-						uniform.z = it.text.toIntOrNull() ?: 0
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toIntOrNull() ?: 0 },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toIntOrNull() ?: 0 },
+					NumComp("Z", uniform.z.toString()) { uniform.z = it.toIntOrNull() ?: 0 },
+					isInt = true,
+				)
 			}
 			is UniformUiState.Int4 -> {
-				intInput().label("X ").text(uniform.x.toString())
-					.onChanged {
-						uniform.x = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("Y ").text(uniform.y.toString())
-					.onChanged {
-						uniform.y = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("Z ").text(uniform.z.toString())
-					.onChanged {
-						uniform.z = it.text.toIntOrNull() ?: 0
-					}
-				intInput().label("W ").text(uniform.w.toString())
-					.onChanged {
-						uniform.w = it.text.toIntOrNull() ?: 0
-					}
+				numberGrid(
+					NumComp("X", uniform.x.toString()) { uniform.x = it.toIntOrNull() ?: 0 },
+					NumComp("Y", uniform.y.toString()) { uniform.y = it.toIntOrNull() ?: 0 },
+					NumComp("Z", uniform.z.toString()) { uniform.z = it.toIntOrNull() ?: 0 },
+					NumComp("W", uniform.w.toString()) { uniform.w = it.toIntOrNull() ?: 0 },
+					isInt = true,
+				)
 			}
 			is UniformUiState.Mat2 -> {
 				panel {
@@ -376,4 +338,19 @@ fun uniformCell(
 	}
 	if (hasSeparator)
 		separator()
+}
+
+private class NumComp(val label: String, val initial: String, val onChange: (String) -> Unit)
+
+private fun Row.numberGrid(vararg comps: NumComp, isInt: Boolean = false) {
+	panel {
+		comps.toList().chunked(2).forEach { chunk ->
+			row {
+				chunk.forEach { c ->
+					val input = if (isInt) intInput() else floatInput()
+					input.label("${c.label} ").text(c.initial).onChanged { c.onChange(it.text) }
+				}
+			}
+		}
+	}
 }

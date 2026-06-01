@@ -16,16 +16,16 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.CollapsibleRow
 import com.intellij.ui.dsl.builder.components.validationTooltip
+import com.intellij.ui.dsl.builder.TopGap
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.update.MergingUpdateQueue
 import com.intellij.util.ui.update.Update
 import com.mrtarantas.agsl.converters.AgslToSkiaShaderConverter
-import com.mrtarantas.agsl.dsl.uniformCell
+import com.mrtarantas.agsl.dsl.uniformRow
 import com.mrtarantas.agsl.language.AgslFile
 import com.mrtarantas.agsl.language.changeUniformPreviewType
 import com.mrtarantas.agsl.language.insertUniformsAfterLast
@@ -66,13 +66,13 @@ class AgslPreviewEditor(
 		errorMessage.afterChange {
 			hasErrorMessage.set(it.isNotBlank())
 		}
-		val itemsPanel = ItemsPanel(model, ::getUniformCell)
+		val itemsPanel = ItemsPanel(model, ::buildUniformsPanel)
 		var collapsingRow: CollapsibleRow? = null
 		val uniformsPanel: DialogPanel = panel {
 			collapsingRow = collapsibleGroup("Uniforms") {
 				row {
 					cell(itemsPanel).align(Align.FILL)
-				}.resizableRow()
+				}.resizableRow().topGap(TopGap.SMALL)
 			}.apply {
 				expanded = true
 				resizableRow()
@@ -80,12 +80,14 @@ class AgslPreviewEditor(
 		}
 		val previewPanel: DialogPanel = panel {
 			group("Preview") {
-				row { cell(skiaPanel).align(Align.FILL).resizableColumn() }.resizableRow()
+				row { cell(skiaPanel).align(Align.FILL).resizableColumn() }.resizableRow().topGap(TopGap.SMALL)
 				row {
 					validationTooltip(errorMessage).visibleIf(hasErrorMessage)
 				}
 			}.resizableRow()
 		}
+
+		val sectionGap = JBUI.scale(16)
 
 		panel.layout = object : LayoutManager {
 			override fun addLayoutComponent(name: String?, comp: Component?) {}
@@ -99,7 +101,7 @@ class AgslPreviewEditor(
 				else
 					uniformsPanel.preferredSize.height
 				val previewPref = previewPanel.preferredSize.height
-				return Dimension(w, uniformsPref + previewPref)
+				return Dimension(w, uniformsPref + sectionGap + previewPref)
 			}
 
 			override fun minimumLayoutSize(parent: Container): Dimension = Dimension(0, 0)
@@ -117,13 +119,14 @@ class AgslPreviewEditor(
 					uniformsPanel.preferredSize.height
 				}
 				uniformsPanel.setBounds(x, y, w, uniformsH)
-				previewPanel.setBounds(x, y + uniformsH, w, h - uniformsH)
+				val previewY = y + uniformsH + sectionGap
+				previewPanel.setBounds(x, previewY, w, (h - uniformsH - sectionGap).coerceAtLeast(0))
 			}
 		}
 
 		panel.add(uniformsPanel)
 		panel.add(previewPanel)
-		panel.border = JBUI.Borders.customLine(transparent, 50)
+		panel.border = JBUI.Borders.empty(8, 16)
 
 		// Re-layout when uniforms collapse/expand
 		collapsingRow?.addExpandedListener { panel.revalidate() }
@@ -143,9 +146,13 @@ class AgslPreviewEditor(
 		scheduleRebuild()
 	}
 
-	private fun getUniformCell(index: Int, property: UniformPropertyUiState): JComponent {
-		return uniformCell(property, project, index < model.value.indices.last) { uniform, newType ->
-			psiFile?.changeUniformPreviewType(uniform, newType)
+	private fun buildUniformsPanel(uniforms: List<UniformPropertyUiState>): JComponent {
+		return panel {
+			uniforms.forEachIndexed { index, property ->
+				uniformRow(property, project, index < uniforms.lastIndex) { uniform, newType ->
+					psiFile?.changeUniformPreviewType(uniform, newType)
+				}
+			}
 		}.apply {
 			registerValidators(this@AgslPreviewEditor)
 		}
@@ -192,9 +199,5 @@ class AgslPreviewEditor(
 	override fun dispose() {
 		document?.removeDocumentListener(docListener)
 		skiaPanel.dispose()
-	}
-
-	companion object {
-		private val transparent = JBColor(Color(0f, 0f, 0f, 0f), Color(0f, 0f, 0f, 0f))
 	}
 }

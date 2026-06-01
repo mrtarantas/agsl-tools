@@ -5,8 +5,10 @@ import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.Row
 import com.intellij.ui.dsl.builder.columns
 
-fun Row.floatInput(): Cell<JBTextField> {
-	return textField().columns(10).validationOnInput {
+private const val NUMBER_COLUMNS = 6
+
+fun Row.floatInput(columns: Int = NUMBER_COLUMNS): Cell<JBTextField> {
+	return textField().columns(columns).validationOnInput {
 		val v = it.text.toFloatOrNull()
 		if (v == null)
 			error("Enter float number")
@@ -15,8 +17,8 @@ fun Row.floatInput(): Cell<JBTextField> {
 	}
 }
 
-fun Row.intInput(): Cell<JBTextField> {
-	return textField().columns(10).validationOnInput {
+fun Row.intInput(columns: Int = NUMBER_COLUMNS): Cell<JBTextField> {
+	return textField().columns(columns).validationOnInput {
 		val v = it.text.toIntOrNull()
 		if (v == null)
 			error("Enter int number")
