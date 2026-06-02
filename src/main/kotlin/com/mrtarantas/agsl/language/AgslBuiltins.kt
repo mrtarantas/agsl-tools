@@ -80,57 +80,37 @@ object AgslBuiltins {
 		return filter { type -> types.none { exceptType -> exceptType == type } }
 	}
 
-	private fun expandParameters(names: List<String>, types: List<String>): List<List<String>> {
-		return types.map { type ->
-			names.map { name ->
-				buildString {
-					append(type)
-					append(' ')
-					append(name)
-				}
-			}
-		}
+	class Overload(val returnType: String, val params: List<String>)
+
+	private fun staticParam(pair: Pair<String, String>): String = "${pair.first} ${pair.second}"
+
+	private fun expandParameters(
+		names: List<String>,
+		types: List<String>,
+		returnOf: (String) -> String = { it },
+	): List<Overload> = types.map { type ->
+		Overload(returnOf(type), names.map { "$type $it" })
 	}
 
-	private fun expandParametersPreMix(vararg static: Pair<String, String>, names: List<String>, types: List<String>): List<List<String>> {
-		return types.map { type ->
-			static.map { staticParam ->
-				buildString {
-					val (type, name) = staticParam
-					append(type)
-					append(' ')
-					append(name)
-				}
-			} + names.map { name ->
-				buildString {
-					append(type)
-					append(' ')
-					append(name)
-				}
-			}
-		}
+	private fun expandParametersPreMix(
+		vararg static: Pair<String, String>,
+		names: List<String>,
+		types: List<String>,
+		returnOf: (String) -> String = { it },
+	): List<Overload> = types.map { type ->
+		Overload(returnOf(type), static.map { staticParam(it) } + names.map { "$type $it" })
 	}
 
-	private fun expandParametersPostMix(names: List<String>, types: List<String>, vararg static: Pair<String, String>): List<List<String>> {
-		return types.map { type ->
-			names.map { name ->
-				buildString {
-					append(type)
-					append(' ')
-					append(name)
-				}
-			} + static.map { staticParam ->
-				buildString {
-					val (type, name) = staticParam
-					append(type)
-					append(' ')
-					append(name)
-				}
-			}
-		}
+	private fun expandParametersPostMix(
+		names: List<String>,
+		types: List<String>,
+		vararg static: Pair<String, String>,
+		returnOf: (String) -> String = { it },
+	): List<Overload> = types.map { type ->
+		Overload(returnOf(type), names.map { "$type $it" } + static.map { staticParam(it) })
 	}
 
-	private val SIGNATURES: Map<String, List<List<String>>> = mapOf(
+	private val SIGNATURES: Map<String, List<Overload>> = mapOf(
 		"radians" to expandParameters(listOf("degrees"), GT),
 		"degrees" to expandParameters(listOf("radians"), GT),
 		"sin" to expandParameters(listOf("angle"), GT),
@@ -162,9 +142,9 @@ object AgslBuiltins {
 			expandParametersPreMix(Float to "edge", names = listOf("x"), types = GT.except(Float)),
 		"smoothstep" to expandParameters(listOf("edge0", "edge1", "x"), GT) +
 			expandParametersPreMix(Float to "edge0", Float to "edge1", names = listOf("x"), types = GT.except(Float)),
-		"length" to expandParameters(listOf("v"), GT),
-		"distance" to expandParameters(listOf("p0", "p1"), GT),
-		"dot" to expandParameters(listOf("a", "b"), GT),
+		"length" to expandParameters(listOf("v"), GT) { Float },
+		"distance" to expandParameters(listOf("p0", "p1"), GT) { Float },
+		"dot" to expandParameters(listOf("a", "b"), GT) { Float },
 		"cross" to expandParameters(listOf("a", "b"), Vec3),
 		"normalize" to expandParameters(listOf("v"), GT),
 		"faceforward" to expandParameters(listOf("N", "I", "Nref"), GT),
@@ -173,11 +153,13 @@ object AgslBuiltins {
 			expandParametersPostMix(listOf("I", "N"), GT, Half to "eta"),
 		"matrixCompMult" to expandParameters(listOf("a", "b"), Matrix),
 		"inverse" to expandParameters(listOf("m"), Matrix),
-		"unpremul" to listOf(listOf("half4 color")),
-		"toLinearSrgb" to listOf(listOf("half3 color")),
-		"fromLinearSrgb" to listOf(listOf("half3 color")),
-		"eval" to listOf(listOf("float2 coord")),
+		"unpremul" to listOf(Overload("half4", listOf("half4 color"))),
+		"toLinearSrgb" to listOf(Overload("half3", listOf("half3 color"))),
+		"fromLinearSrgb" to listOf(Overload("half3", listOf("half3 color"))),
+		"eval" to listOf(Overload("half4", listOf("float2 coord"))),
 	)
 
-	fun signatureFor(name: String): List<List<String>>? = SIGNATURES[name]
+	fun overloadsFor(name: String): List<Overload>? = SIGNATURES[name]
+
+	fun signatureFor(name: String): List<List<String>>? = SIGNATURES[name]?.map { it.params }
 }

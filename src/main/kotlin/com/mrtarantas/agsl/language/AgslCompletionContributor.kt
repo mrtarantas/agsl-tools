@@ -61,10 +61,10 @@ private fun precedingWord(text: CharSequence, end: Int): String {
 	return text.subSequence(start + 1, end + 1).toString()
 }
 
-private fun functionLookup(name: String, typeText: String): LookupElement =
+private fun callLookup(name: String, params: List<String>, returnType: String): LookupElement =
 	LookupElementBuilder.create(name)
-		.withTypeText(typeText, true)
-		.withTailText("()", true)
+		.withTailText("(" + params.joinToString(", ") + ")", true)
+		.withTypeText(returnType, true)
 		.withInsertHandler(INSERT_PARENS)
 
 class AgslCompletionContributor : CompletionContributor() {
@@ -77,8 +77,13 @@ class AgslCompletionContributor : CompletionContributor() {
 			) {
 				KEYWORDS.forEach { result.addElement(LookupElementBuilder.create(it)) }
 				TYPES.forEach { result.addElement(LookupElementBuilder.create(it)) }
-				(AgslBuiltins.FUNCTIONS + AgslBuiltins.METHODS).forEach {
-					result.addElement(functionLookup(it, "built-in"))
+				(AgslBuiltins.FUNCTIONS + AgslBuiltins.METHODS).forEach { name ->
+					val overloads = AgslBuiltins.overloadsFor(name)
+					if (overloads.isNullOrEmpty()) {
+						result.addElement(callLookup(name, emptyList(), "built-in"))
+					} else {
+						overloads.forEach { o -> result.addElement(callLookup(name, o.params, o.returnType)) }
+					}
 				}
 				AgslBuiltins.SWIZZLES.forEach { result.addElement(LookupElementBuilder.create(it)) }
 				addFileFunctions(params, result)
@@ -95,7 +100,11 @@ class AgslCompletionContributor : CompletionContributor() {
 	private fun addFileFunctions(params: CompletionParameters, result: CompletionResultSet) {
 		val file = params.originalFile as? AgslFile ?: return
 		file.allFuncDefs().forEach { def ->
-			def.name?.let { result.addElement(functionLookup(it, "func")) }
+			val name = def.name ?: return@forEach
+			val paramLabels = def.paramList?.paramList.orEmpty().map { param ->
+				param.name?.let { "${param.type.text} $it" } ?: param.type.text
+			}
+			result.addElement(callLookup(name, paramLabels, def.type.text))
 		}
 	}
 }
