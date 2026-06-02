@@ -15,7 +15,7 @@ class UniformParser {
         ([A-Za-z][A-Za-z0-9]*(?:[234](?:x[234])?)?)   # type
         \s+([A-Za-z_]\w*)                              # name
         \s*;\s*
-        (?:\/\/\s*previewtype\s*:\s*([A-Za-z_][A-Za-z0-9_\- ]*))?   # optional trailing preview
+        (?://.*)?                                      # optional trailing comment
         \s*$
     """.trimIndent(),
 		options = setOf(RegexOption.IGNORE_CASE, RegexOption.COMMENTS)
