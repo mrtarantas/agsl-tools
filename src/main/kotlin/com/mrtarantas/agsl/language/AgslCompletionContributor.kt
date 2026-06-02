@@ -26,10 +26,39 @@ private val INSERT_PARENS = InsertHandler<LookupElement> { context, _ ->
 	val document = context.document
 	val tail = context.tailOffset
 	val hasParen = tail < document.textLength && document.charsSequence[tail] == '('
-	if (!hasParen) document.insertString(tail, "()")
+	if (!hasParen) {
+		document.insertString(tail, "()")
+		if (shouldAppendSemicolon(document.charsSequence, context.startOffset, tail + 2))
+			document.insertString(tail + 2, ";")
+	}
 	editor.caretModel.moveToOffset(tail + 1)
 	context.commitDocument()
 	AutoPopupController.getInstance(context.project).autoPopupParameterInfo(editor, null)
+}
+
+private val STATEMENT_KEYWORDS = setOf("return", "else", "do")
+
+private fun shouldAppendSemicolon(text: CharSequence, nameStart: Int, afterCloseParen: Int): Boolean {
+	var f = afterCloseParen
+	while (f < text.length && (text[f] == ' ' || text[f] == '\t')) f++
+	if (f < text.length) {
+		when (text[f]) {
+			';', ')', ']', ',', '.', '?', ':', '+', '-', '*', '/', '<', '>', '=', '&', '|', '^' -> return false
+		}
+	}
+	var b = nameStart - 1
+	while (b >= 0 && text[b].isWhitespace()) b--
+	if (b < 0) return true
+	return when (text[b]) {
+		';', '{', '}', ')' -> true
+		else -> precedingWord(text, b) in STATEMENT_KEYWORDS
+	}
+}
+
+private fun precedingWord(text: CharSequence, end: Int): String {
+	var start = end
+	while (start >= 0 && (text[start].isLetterOrDigit() || text[start] == '_')) start--
+	return text.subSequence(start + 1, end + 1).toString()
 }
 
 private fun functionLookup(name: String, typeText: String): LookupElement =
