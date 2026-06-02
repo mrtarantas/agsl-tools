@@ -45,8 +45,16 @@ intellijPlatform {
 		}
 
 		changeNotes = """
-      Initial version
-    """.trimIndent()
+            <ul>
+                <li>Added support for navigating to variables and functions</li>
+                <li>Improved code completion</li>
+                <li>Added support for code reformatting</li>
+                <li>Added a new action for creating an empty AGSL shader</li>
+                <li>Improved code hints</li>
+                <li>Slightly redesigned the preview panel</li>
+                <li>Fixed bugs</li>
+            </ul>
+        """.trimIndent()
 	}
 }
 
