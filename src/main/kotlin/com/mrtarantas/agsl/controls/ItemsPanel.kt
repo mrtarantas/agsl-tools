@@ -39,7 +39,7 @@ class ItemsPanel<Item>(
 	}
 
 	fun rebuild(list: List<Item>) {
-		scrollPane.setViewportView(WidthTrackingWrapper(content(list)))
+		scrollPane.setViewportView(WidthTrackingWrapper(content.invoke(list)))
 		scrollPane.revalidate()
 		scrollPane.repaint()
 		var p = parent

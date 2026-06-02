@@ -16,6 +16,8 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.ui.JBColor
+import com.intellij.ui.RoundedLineBorder
 import com.intellij.ui.dsl.builder.Align
 import com.intellij.ui.dsl.builder.CollapsibleRow
 import com.intellij.ui.dsl.builder.TopGap
@@ -73,12 +75,18 @@ class AgslPreviewEditor(
 			collapsingRow = collapsibleGroup("Uniforms") {
 				row {
 					cell(itemsPanel).align(Align.FILL)
-				}.resizableRow().topGap(TopGap.SMALL)
+				}
+					.resizableRow()
+					.topGap(TopGap.SMALL)
 			}.apply {
 				expanded = true
 				resizableRow()
 			}
 		}
+		itemsPanel.border = JBUI.Borders.compound(
+			RoundedLineBorder(JBColor.border(), JBUI.scale(16), 1),
+			JBUI.Borders.empty(),
+		)
 		val previewPanel: DialogPanel = panel {
 			group("Preview") {
 				row { cell(skiaPanel).align(Align.FILL).resizableColumn() }.resizableRow().topGap(TopGap.SMALL)
@@ -127,7 +135,7 @@ class AgslPreviewEditor(
 
 		panel.add(uniformsPanel)
 		panel.add(previewPanel)
-		panel.border = JBUI.Borders.empty(8, 16)
+		panel.border = JBUI.Borders.empty(8, 8)
 
 		collapsingRow?.addExpandedListener { panel.revalidate() }
 
@@ -154,6 +162,7 @@ class AgslPreviewEditor(
 				}
 			}
 		}.apply {
+			border = JBUI.Borders.empty(16)
 			registerValidators(this@AgslPreviewEditor)
 		}
 	}
