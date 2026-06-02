@@ -82,4 +82,16 @@
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslFormattingModelBuilder"/>
 	</extensions>
+
+	<actions>
+
+		<action
+			id="com.mrtarantas.agsl.actions.NewAgslShaderAction"
+			class="com.mrtarantas.agsl.actions.NewAgslShaderAction"
+			text="AGSL Shader"
+			icon="com.mrtarantas.agsl.AgslIcons.File"
+			description="Creates AGSL shader file">
+			<add-to-group group-id="NewGroup" anchor="first"/>
+		</action>
+	</actions>
 </idea-plugin>
