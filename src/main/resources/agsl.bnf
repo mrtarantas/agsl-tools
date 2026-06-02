@@ -165,7 +165,7 @@ postfix_expr            ::= primary_expr (
                             (PLUSPLUS|MINUSMINUS)
                             | (LPAREN argument_list? RPAREN)
                             | (LBRACK expr RBRACK)
-                            | (DOT IDENT)
+                            | (DOT field_access)
                           )*
 
 primary_expr            ::= literal
@@ -175,6 +175,11 @@ primary_expr            ::= literal
 
 reference_expr          ::= IDENT {
   mixin="com.mrtarantas.agsl.language.psi.AgslReferenceExprMixin"
+}
+
+// field / swizzle / method after a dot: `color.rgb`, `shader.eval(...)`
+field_access            ::= IDENT {
+  mixin="com.mrtarantas.agsl.language.psi.AgslFieldAccessMixin"
 }
 
 literal                 ::= TRUE | FALSE | INT_LITERAL | FLOAT_LITERAL

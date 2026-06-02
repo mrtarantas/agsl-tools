@@ -22,10 +22,10 @@ class AgslReference(element: PsiElement) :
 	}
 }
 
-class AgslBuiltinMethodReference(element: PsiElement, private val methodName: String) :
+class AgslFieldReference(element: PsiElement) :
 	PsiReferenceBase<PsiElement>(element, TextRange(0, element.textLength)) {
 
-	override fun resolve(): PsiElement = AgslBuiltinFunctionElement(element, methodName)
+	override fun resolve(): PsiElement = AgslBuiltinFunctionElement(element, element.text)
 }
 
 object AgslResolver {

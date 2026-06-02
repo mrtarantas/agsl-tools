@@ -70,10 +70,6 @@
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslRefactoringSupportProvider"/>
 
-		<psi.referenceContributor
-			language="AndroidShaderLanguage"
-			implementation="com.mrtarantas.agsl.language.AgslReferenceContributor"/>
-
 		<lang.documentationProvider
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslDocumentationProvider"/>
