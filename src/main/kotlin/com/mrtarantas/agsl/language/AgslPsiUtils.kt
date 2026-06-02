@@ -11,9 +11,11 @@ import com.mrtarantas.agsl.language.generated.psi.*
 import com.mrtarantas.agsl.models.PreviewType
 import com.mrtarantas.agsl.parsers.CommentPreviewTypeBuilder
 
-fun AgslFile.findFuncDefs(name: String): Collection<AgslFuncDef> =
+fun AgslFile.allFuncDefs(): Collection<AgslFuncDef> =
 	PsiTreeUtil.findChildrenOfType(this, AgslFuncDef::class.java)
-		.filter { it.name == name }
+
+fun AgslFile.findFuncDefs(name: String): Collection<AgslFuncDef> =
+	allFuncDefs().filter { it.name == name }
 
 fun AgslUniformDecl.variableNames(): List<String> =
 	varList.varNameList.mapNotNull { it.name }

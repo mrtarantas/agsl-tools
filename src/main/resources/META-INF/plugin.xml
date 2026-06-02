@@ -73,5 +73,9 @@
 		<lang.documentationProvider
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslDocumentationProvider"/>
+
+		<codeInsight.parameterInfo
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslParameterInfoHandler"/>
 	</extensions>
 </idea-plugin>

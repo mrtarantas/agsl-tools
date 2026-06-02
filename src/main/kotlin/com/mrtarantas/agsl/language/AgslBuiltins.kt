@@ -67,4 +67,117 @@ object AgslBuiltins {
 	)
 
 	fun docFor(name: String): String? = DOCS[name]
+
+	private val Float = "float"
+	private val Half = "half"
+	private val Float3 = "float3"
+	private val Half3 = "half3"
+	private val Vec3 = listOf(Float3, Half3)
+	private val GT = listOf(Float, "float2", Float3, "float4", Half, "half2", Half3, "half4")
+	private val Matrix = listOf("float2x2", "float3x3", "float4x4", "half2x2", "half3x3", "half4x4")
+
+	private fun List<String>.except(vararg types: String): List<String> {
+		return filter { type -> types.none { exceptType -> exceptType == type } }
+	}
+
+	private fun expandParameters(names: List<String>, types: List<String>): List<List<String>> {
+		return types.map { type ->
+			names.map { name ->
+				buildString {
+					append(type)
+					append(' ')
+					append(name)
+				}
+			}
+		}
+	}
+
+	private fun expandParametersPreMix(vararg static: Pair<String, String>, names: List<String>, types: List<String>): List<List<String>> {
+		return types.map { type ->
+			static.map { staticParam ->
+				buildString {
+					val (type, name) = staticParam
+					append(type)
+					append(' ')
+					append(name)
+				}
+			} + names.map { name ->
+				buildString {
+					append(type)
+					append(' ')
+					append(name)
+				}
+			}
+		}
+	}
+
+	private fun expandParametersPostMix(names: List<String>, types: List<String>, vararg static: Pair<String, String>): List<List<String>> {
+		return types.map { type ->
+			names.map { name ->
+				buildString {
+					append(type)
+					append(' ')
+					append(name)
+				}
+			} + static.map { staticParam ->
+				buildString {
+					val (type, name) = staticParam
+					append(type)
+					append(' ')
+					append(name)
+				}
+			}
+		}
+	}
+
+	private val SIGNATURES: Map<String, List<List<String>>> = mapOf(
+		"radians" to expandParameters(listOf("degrees"), GT),
+		"degrees" to expandParameters(listOf("radians"), GT),
+		"sin" to expandParameters(listOf("angle"), GT),
+		"cos" to expandParameters(listOf("angle"), GT),
+		"tan" to expandParameters(listOf("angle"), GT),
+		"asin" to expandParameters(listOf("x"), GT),
+		"acos" to expandParameters(listOf("x"), GT),
+		"atan" to expandParameters(listOf("y_over_x"), GT) + expandParameters(listOf("y", "x"), GT),
+		"pow" to expandParameters(listOf("x", "y"), GT),
+		"exp" to expandParameters(listOf("x"), GT),
+		"log" to expandParameters(listOf("x"), GT),
+		"exp2" to expandParameters(listOf("x"), GT),
+		"log2" to expandParameters(listOf("x"), GT),
+		"sqrt" to expandParameters(listOf("x"), GT),
+		"inversesqrt" to expandParameters(listOf("x"), GT),
+		"abs" to expandParameters(listOf("x"), GT),
+		"sign" to expandParameters(listOf("x"), GT),
+		"floor" to expandParameters(listOf("x"), GT),
+		"ceil" to expandParameters(listOf("x"), GT),
+		"fract" to expandParameters(listOf("x"), GT),
+		"mod" to expandParameters(listOf("x", "y"), GT) + expandParametersPostMix(listOf("x"), GT.except(Float), Float to "y"),
+		"min" to expandParameters(listOf("a", "b"), GT) + expandParametersPostMix(listOf("a"), GT.except(Float), Float to "b"),
+		"max" to expandParameters(listOf("a", "b"), GT) + expandParametersPostMix(listOf("a"), GT.except(Float), Float to "b"),
+		"mix" to expandParameters(listOf("x", "y", "a"), GT) + expandParametersPostMix(listOf("x", "y"), GT.except(Float), Float to "a"),
+		"clamp" to expandParameters(listOf("x", "minVal", "maxVal"), GT) +
+			expandParametersPostMix(listOf("x"), GT.except(Float), Float to "minVal", Float to "maxVal"),
+		"saturate" to expandParameters(listOf("x"), GT),
+		"step" to expandParameters(listOf("edge", "x"), GT) +
+			expandParametersPreMix(Float to "edge", names = listOf("x"), types = GT.except(Float)),
+		"smoothstep" to expandParameters(listOf("edge0", "edge1", "x"), GT) +
+			expandParametersPreMix(Float to "edge0", Float to "edge1", names = listOf("x"), types = GT.except(Float)),
+		"length" to expandParameters(listOf("v"), GT),
+		"distance" to expandParameters(listOf("p0", "p1"), GT),
+		"dot" to expandParameters(listOf("a", "b"), GT),
+		"cross" to expandParameters(listOf("a", "b"), Vec3),
+		"normalize" to expandParameters(listOf("v"), GT),
+		"faceforward" to expandParameters(listOf("N", "I", "Nref"), GT),
+		"reflect" to expandParameters(listOf("I", "N"), GT),
+		"refract" to expandParametersPostMix(listOf("I", "N"), GT, Float to "eta") +
+			expandParametersPostMix(listOf("I", "N"), GT, Half to "eta"),
+		"matrixCompMult" to expandParameters(listOf("a", "b"), Matrix),
+		"inverse" to expandParameters(listOf("m"), Matrix),
+		"unpremul" to listOf(listOf("half4 color")),
+		"toLinearSrgb" to listOf(listOf("half3 color")),
+		"fromLinearSrgb" to listOf(listOf("half3 color")),
+		"eval" to listOf(listOf("float2 coord")),
+	)
+
+	fun signatureFor(name: String): List<List<String>>? = SIGNATURES[name]
 }

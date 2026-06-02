@@ -177,7 +177,6 @@ reference_expr          ::= IDENT {
   mixin="com.mrtarantas.agsl.language.psi.AgslReferenceExprMixin"
 }
 
-// field / swizzle / method after a dot: `color.rgb`, `shader.eval(...)`
 field_access            ::= IDENT {
   mixin="com.mrtarantas.agsl.language.psi.AgslFieldAccessMixin"
 }
