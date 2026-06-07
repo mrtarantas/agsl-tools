@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "com.mrtarantas"
-version = "1.1.0"
+version = "1.1.1"
 
 val targetBuild = "252"
 val targetIJVersion = "2025.2.1"
