@@ -52,6 +52,7 @@ intellijPlatform {
                 <li>Added a new action for creating an empty AGSL shader</li>
                 <li>Improved code hints</li>
                 <li>Slightly redesigned the preview panel</li>
+				<li>Improved highlighting</li>
                 <li>Fixed bugs</li>
             </ul>
         """.trimIndent()
