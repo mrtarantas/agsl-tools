@@ -48,5 +48,7 @@ class AgslSyntaxHighlighter : SyntaxHighlighterBase() {
 		val NUMBER = TextAttributesKey.createTextAttributesKey("AGSL_NUMBER", DLH.NUMBER)
 		val COMMENT = TextAttributesKey.createTextAttributesKey("AGSL_COMMENT", DLH.LINE_COMMENT)
 		val OP = TextAttributesKey.createTextAttributesKey("AGSL_OPERATOR", DLH.OPERATION_SIGN)
+		val UNIFORM = TextAttributesKey.createTextAttributesKey("AGSL_UNIFORM", DLH.INSTANCE_FIELD)
+		val BUILTIN = TextAttributesKey.createTextAttributesKey("AGSL_BUILTIN", DLH.STATIC_METHOD)
 	}
 }

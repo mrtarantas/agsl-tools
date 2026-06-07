@@ -81,6 +81,10 @@
 		<lang.formatter
 			language="AndroidShaderLanguage"
 			implementationClass="com.mrtarantas.agsl.language.AgslFormattingModelBuilder"/>
+
+		<annotator
+			language="AndroidShaderLanguage"
+			implementationClass="com.mrtarantas.agsl.language.AgslAnnotator"/>
 	</extensions>
 
 	<actions>
