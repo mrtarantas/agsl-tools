@@ -5,8 +5,9 @@ import com.intellij.codeInsight.completion.*
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns.psiElement
+import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.ProcessingContext
-import com.mrtarantas.agsl.language.generated.psi.AgslTypes
+import com.mrtarantas.agsl.language.generated.psi.*
 
 private val KEYWORDS = listOf(
 	"uniform", "const", "shader",
@@ -67,6 +68,9 @@ private fun callLookup(name: String, params: List<String>, returnType: String): 
 		.withTypeText(returnType, true)
 		.withInsertHandler(INSERT_PARENS)
 
+private fun valueLookup(name: String, typeText: String): LookupElement =
+	LookupElementBuilder.create(name).withTypeText(typeText, true)
+
 class AgslCompletionContributor : CompletionContributor() {
 	init {
 		extend(CompletionType.BASIC, psiElement(), object : CompletionProvider<CompletionParameters>() {
@@ -87,12 +91,14 @@ class AgslCompletionContributor : CompletionContributor() {
 				}
 				AgslBuiltins.SWIZZLES.forEach { result.addElement(LookupElementBuilder.create(it)) }
 				addFileFunctions(params, result)
+				addVariablesInScope(params, result)
 			}
 		})
 
 		extend(CompletionType.BASIC, psiElement(AgslTypes.IDENT), object : CompletionProvider<CompletionParameters>() {
 			override fun addCompletions(params: CompletionParameters, ctx: ProcessingContext, result: CompletionResultSet) {
 				addFileFunctions(params, result)
+				addVariablesInScope(params, result)
 			}
 		})
 	}
@@ -105,6 +111,46 @@ class AgslCompletionContributor : CompletionContributor() {
 				param.name?.let { "${param.type.text} $it" } ?: param.type.text
 			}
 			result.addElement(callLookup(name, paramLabels, def.type.text))
+		}
+	}
+
+	private fun addVariablesInScope(params: CompletionParameters, result: CompletionResultSet) {
+		val file = params.originalFile as? AgslFile ?: return
+		val offset = params.offset
+		val seen = HashSet<String>()
+		val enclosingFunc = PsiTreeUtil.findChildrenOfType(file, AgslFuncDef::class.java)
+			.firstOrNull { it.textRange.contains(offset) }
+		if (enclosingFunc != null) {
+			enclosingFunc.paramList?.paramList?.forEach { p ->
+				val n = p.name ?: return@forEach
+				if (seen.add(n)) result.addElement(valueLookup(n, "${p.type.text} · param"))
+			}
+			PsiTreeUtil.findChildrenOfType(enclosingFunc, AgslInitDeclarator::class.java)
+				.filter { it.textOffset < offset }
+				.forEach { d ->
+					val typeText = d.getDeclType()?.text
+					d.name?.let { if (seen.add(it)) result.addElement(valueLookup(it, "$typeText · variable")) }
+				}
+		}
+		PsiTreeUtil.findChildrenOfType(file, AgslUniformDecl::class.java)
+			.flatMap { it.varList.varNameList }
+			.forEach { vn ->
+				val typeText = PsiTreeUtil.getParentOfType(vn, AgslUniformDecl::class.java)?.type?.text
+				vn.name?.let { if (seen.add(it)) result.addElement(valueLookup(it, "$typeText · uniform")) }
+			}
+		PsiTreeUtil.findChildrenOfType(file, AgslInitDeclarator::class.java)
+			.filter { it.textOffset < offset && PsiTreeUtil.getParentOfType(it, AgslFuncDef::class.java) == null }
+			.forEach { d ->
+				val typeText = d.getDeclType()?.text
+				d.name?.let { if (seen.add(it)) result.addElement(valueLookup(it, "$typeText · variable")) }
+			}
+	}
+
+	private fun AgslInitDeclarator.getDeclType(): AgslType? {
+		return when (val owner = PsiTreeUtil.getParentOfType(this, AgslVarDecl::class.java, AgslConstDecl::class.java)) {
+			is AgslVarDecl -> owner.type
+			is AgslConstDecl -> owner.type
+			else -> null
 		}
 	}
 }

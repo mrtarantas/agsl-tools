@@ -135,7 +135,7 @@ class AgslPreviewEditor(
 
 		panel.add(uniformsPanel)
 		panel.add(previewPanel)
-		panel.border = JBUI.Borders.empty(8, 8)
+		panel.border = JBUI.Borders.empty(8)
 
 		collapsingRow?.addExpandedListener { panel.revalidate() }
 
@@ -145,7 +145,7 @@ class AgslPreviewEditor(
 		}
 		if (document != null) {
 			psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) as? AgslFile
-			document.addDocumentListener(docListener)
+			document.addDocumentListener(docListener, this)
 		} else {
 			psiFile = null
 		}
@@ -203,6 +203,6 @@ class AgslPreviewEditor(
 
 	override fun dispose() {
 		document?.removeDocumentListener(docListener)
-		skiaPanel.dispose()
+		runCatching { skiaPanel.dispose() }
 	}
 }

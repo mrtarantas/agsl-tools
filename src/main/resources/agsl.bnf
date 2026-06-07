@@ -60,18 +60,28 @@
 // ---------- Root ----------
 AgslFile ::= item*
 
-private item ::= declaration | statement | SEMI
+private item ::= declaration | statement | SEMI {
+  recoverWhile = item_recover
+}
+
+private item_recover ::= !item_start
+private item_start ::=
+    KW_UNIFORM | KW_CONST | 'struct'
+  | type
+  | KW_IF | KW_WHILE | KW_DO | KW_FOR | KW_RETURN | KW_BREAK | KW_CONTINUE
+  | LBRACE | RBRACE | LPAREN | IDENT
+  | TRUE | FALSE | INT_LITERAL | FLOAT_LITERAL
 
 // ---------- Declaration ----------
 declaration ::= uniform_decl
               | const_decl
-              | var_decl
-              | func_def
               | struct_decl
+              | func_def
+              | var_decl
 
-uniform_decl ::= KW_UNIFORM type var_list SEMI
-const_decl   ::= KW_CONST type init_declarator_list SEMI
-var_decl     ::= type init_declarator_list SEMI
+uniform_decl ::= KW_UNIFORM type var_list SEMI { pin=3 }
+const_decl   ::= KW_CONST type init_declarator_list SEMI { pin=3 }
+var_decl     ::= type init_declarator_list SEMI { pin=2 }
 
 // a, b=1, c
 init_declarator_list ::= init_declarator (COMMA init_declarator)*
@@ -81,7 +91,7 @@ init_declarator      ::= IDENT (EQ expr)? {
 }
 
 // Struct
-struct_decl ::= 'struct' IDENT LBRACE struct_member* RBRACE (IDENT)? SEMI
+struct_decl ::= 'struct' IDENT LBRACE struct_member* RBRACE (IDENT)? SEMI { pin=2 }
 struct_member ::= type var_list SEMI
 var_list ::= var_name (COMMA var_name)*
 var_name ::= IDENT {
@@ -113,6 +123,7 @@ glsl_mat_type ::= KW_MAT2 | KW_MAT3 | KW_MAT4
 
 // ---------- functions ----------
 func_def ::= type IDENT LPAREN param_list? RPAREN compound_stmt {
+  pin=3
   implements="com.mrtarantas.agsl.language.psi.AgslNamedElement"
   mixin="com.mrtarantas.agsl.language.psi.AgslNamedElementMixin"
 }
@@ -134,7 +145,7 @@ statement ::=
     | return_stmt
     | expr_stmt
 
-compound_stmt ::= LBRACE item* RBRACE
+compound_stmt ::= LBRACE item* RBRACE { pin=1 }
 if_stmt       ::= KW_IF LPAREN expr RPAREN statement (KW_ELSE statement)?
 while_stmt    ::= KW_WHILE LPAREN expr RPAREN statement
 do_while_stmt ::= KW_DO statement KW_WHILE LPAREN expr RPAREN SEMI
@@ -144,7 +155,7 @@ for_stmt      ::= KW_FOR LPAREN (var_decl | expr_stmt | SEMI)
 break_stmt    ::= KW_BREAK SEMI
 continue_stmt ::= KW_CONTINUE SEMI
 return_stmt   ::= KW_RETURN expr? SEMI
-expr_stmt     ::= expr SEMI
+expr_stmt     ::= expr SEMI { pin=1 }
 
 // ---------- Expressions ----------
 expr                    ::= assignment_expr

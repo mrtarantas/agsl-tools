@@ -73,6 +73,7 @@ dependencies {
 	runtimeOnly("org.jetbrains.skiko:skiko-awt-runtime-all:0.9.22") {
 		exclude(group = "org.jetbrains.runtime", module = "jbr-api")
 	}
+	testImplementation("junit:junit:4.13.2")
 }
 
 tasks {
