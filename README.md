@@ -1,4 +1,4 @@
-# AGSL Tools. Shader Preview for Android Studio
+# AGSL Tools. Full IDE support for Android Graphics Shading Language (AGSL) in Android Studio.
 
 **AGSL Tools** is an Android Studio plugin that provides a rich development experience for AGSL shaders. It brings real-time visual feedback and powerful coding tools directly into your IDE.
 
