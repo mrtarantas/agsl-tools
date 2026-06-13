@@ -72,6 +72,16 @@ To create a new AGSL file:
 2. Select `New` → `AGSL Shader`
 3. Enter the file name
 4. Start writing the shader code
+5. Load it from res/raw into a RuntimeShader like this:
+```kotlin
+fun loadShaderFromRaw(context: Context): RuntimeShader {
+    val source = context.resources
+        .openRawResource(R.raw.blur)
+        .bufferedReader()
+        .use { it.readText() }
+    return RuntimeShader(source)
+}
+```
 
 To preview the shader:
 
